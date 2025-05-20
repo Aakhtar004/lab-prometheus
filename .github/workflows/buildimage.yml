@@ -36,3 +36,4 @@ jobs:
       - name: Set image output
         id: image_info
         run: echo "::set-output name=image::${{ secrets.DOCKERHUB_USER }}/clienteapi:${{ github.sha }}"
+      #example
