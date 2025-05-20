@@ -4,8 +4,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# 1) Copiamos sólo el .csproj para restore y así aprovechar cache de dependencias
-COPY ["ClienteAPI/ClienteAPI.csproj", "./ClienteAPI.csproj"]
+# 1) Copiamos sólo el .csproj (ahora directo en el contexto)
+COPY ["ClienteAPI.csproj", "./"]
 RUN dotnet restore "ClienteAPI.csproj"
 
 # 2) Copiamos todo el código
