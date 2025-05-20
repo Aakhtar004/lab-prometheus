@@ -1,9 +1,11 @@
 name: Build and Publish API Image
+
 # 1) Se dispara al hacer push a la rama master
 on:
   push:
     branches:
       - master
+
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
@@ -11,23 +13,31 @@ jobs:
       # 2) Obtener el código del repositorio
       - name: Checkout code
         uses: actions/checkout@v3
+
       # 3) Instalar .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
-      # 4) Publicar (build) la API en Release
+
+      # 4) Publicar (build) la API en Release localmente (opcional comprobación)
       - name: Build API
         run: dotnet publish ClienteAPI/ClienteAPI.csproj -c Release -o out
-      # 5) Construir la imagen Docker
+
+      # 5) Construir la imagen Docker SIN CACHE (para invalidar capas viejas)
       - name: Build Docker image
-        run: docker build . -f ClienteAPI/Dockerfile -t ${{ secrets.DOCKERHUB_USER }}/clienteapi:${{ github.sha }}
+        run: |
+          docker build --no-cache ClienteAPI \
+            -f ClienteAPI/Dockerfile \
+            -t ${{ secrets.DOCKERHUB_USER }}/clienteapi:${{ github.sha }}
+
       # 6) Login en Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       # 7) Push de la imagen
       - name: Push image
         run: docker push ${{ secrets.DOCKERHUB_USER }}/clienteapi:${{ github.sha }}
@@ -36,4 +46,3 @@ jobs:
       - name: Set image output
         id: image_info
         run: echo "::set-output name=image::${{ secrets.DOCKERHUB_USER }}/clienteapi:${{ github.sha }}"
-      #example
