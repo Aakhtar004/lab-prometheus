@@ -26,18 +26,24 @@ jobs:
       - name: Wait for services
         run: sleep 30
 
-      # 6) Consultar Prometheus para la métrica db_health_status
-      - name: Query Prometheus
+      # 6) Consultar Prometheus para la métrica db_health_status con reintentos
+      - name: Query Prometheus with retries
         run: |
-          RESPONSE=$(curl -s 'http://localhost:9090/api/v1/query?query=db_health_status')
-          echo "Full response: $RESPONSE"
-          VALUE=$(echo "$RESPONSE" | jq -r '.data.result[0].value[1]')
-          echo "db_health_status = $VALUE"
-          if [ "$VALUE" != "1" ]; then
-            echo "❌ Health check failed: expected 1 but got $VALUE" >&2
-            exit 1
-          fi
-          echo "✅ Health check passed"
+          MAX_RETRIES=10
+          for i in $(seq 1 $MAX_RETRIES); do
+            echo "Attempt $i/$MAX_RETRIES..."
+            RESPONSE=$(curl -s 'http://localhost:9090/api/v1/query?query=db_health_status')
+            VALUE=$(echo "$RESPONSE" | jq -r '.data.result[0].value[1]' || echo null)
+            echo "Response: $RESPONSE"
+            echo "db_health_status = $VALUE"
+            if [ "$VALUE" == "1" ]; then
+              echo "✅ Health check passed on attempt $i"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ Health check failed: db_health_status never became 1 after $MAX_RETRIES tries" >&2
+          exit 1
 
       # 7) Tear down de los contenedores (incluso si falla)
       - name: Teardown
