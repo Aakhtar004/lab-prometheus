@@ -5,7 +5,7 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copiamos el .csproj y restauramos dependencias
-COPY ["ClienteAPI.csproj", "./"]
+COPY ["ClienteAPI/ClienteAPI.csproj", "./ClienteAPI.csproj"]
 RUN dotnet restore "ClienteAPI.csproj"
 
 # Copiamos el resto de archivos y publicamos
