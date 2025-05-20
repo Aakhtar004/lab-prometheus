@@ -1,0 +1,45 @@
+name: Delivery and Test Prometheus
+
+# 1) Trigger manual desde GitHub UI
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # 2) Clonar el repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 3) Instalar Docker Compose y jq
+      - name: Install Docker Compose & jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose jq
+
+      # 4) Levantar todos los servicios en background
+      - name: Start services
+        run: docker-compose up -d
+
+      # 5) Esperar 30s a que la API y Prometheus estén listos
+      - name: Wait for services
+        run: sleep 30
+
+      # 6) Consultar Prometheus para la métrica db_health_status
+      - name: Query Prometheus
+        run: |
+          RESPONSE=$(curl -s 'http://localhost:9090/api/v1/query?query=db_health_status')
+          echo "Full response: $RESPONSE"
+          VALUE=$(echo "$RESPONSE" | jq -r '.data.result[0].value[1]')
+          echo "db_health_status = $VALUE"
+          if [ "$VALUE" != "1" ]; then
+            echo "❌ Health check failed: expected 1 but got $VALUE" >&2
+            exit 1
+          fi
+          echo "✅ Health check passed"
+
+      # 7) Tear down de los contenedores (incluso si falla)
+      - name: Teardown
+        if: always()
+        run: docker-compose down
