@@ -10,7 +10,12 @@ RUN dotnet restore "ClienteAPI.csproj"
 
 # Copiamos el resto de archivos y publicamos
 COPY . .
-RUN dotnet publish "ClienteAPI.csproj" -c Release -o /app/publish
+
+# Forzamos que no se genere AssemblyInfo automáticamente
+RUN dotnet publish "ClienteAPI.csproj" \
+    -c Release -o /app/publish \
+    -p:GenerateAssemblyInfo=false
+
 
 ##################################################
 # STAGE 2: runtime image
