@@ -1,9 +1,9 @@
 name: Build and Publish API Image
-# 1) Se dispara al hacer push a la rama main
+# 1) Se dispara al hacer push a la rama master
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
