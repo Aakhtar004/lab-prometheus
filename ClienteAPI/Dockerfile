@@ -8,10 +8,13 @@ WORKDIR /src
 COPY ["ClienteAPI/ClienteAPI.csproj", "./ClienteAPI.csproj"]
 RUN dotnet restore "ClienteAPI.csproj"
 
-# Copiamos el resto de archivos y publicamos
+# Copiamos todo el proyecto
 COPY . .
 
-# Forzamos que no se genere AssemblyInfo automáticamente
+# 1) Limpiamos posibles artefactos (obj/bin) que contengan attributes generados
+RUN rm -rf obj bin
+
+# 2) Publicamos sin regenerar AssemblyInfo
 RUN dotnet publish "ClienteAPI.csproj" \
     -c Release -o /app/publish \
     -p:GenerateAssemblyInfo=false
